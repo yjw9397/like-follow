@@ -115,7 +115,7 @@ def comments_delete(request, article_pk, comment_pk):
 def likes(request, article_pk):
     if request.user.is_authenticated:
         article = Article.objects.get(pk=article_pk)
-        if article.like_users.filter(pk=article_pk).exists():
+        if article.like_users.filter(pk=request.user.pk).exists():
             article.like_users.remove(request.user)
             is_liked = False
         else:

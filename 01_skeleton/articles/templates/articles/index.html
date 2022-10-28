@@ -14,12 +14,12 @@
     <p>제목 : {{ article.title }}</p>
     <p>내용 : {{ article.content }}</p>
     <div>
-      <form id="follow-form" data-article-id="{{ article.pk }}">
+      <form class="follow-form" data-article-id="{{ article.pk }}">
         {% csrf_token %}
         {% if request.user in article.like_users.all %}
-          <input type="submit" value="좋아요 취소">
+          <input type="submit" value="좋아요 취소" id="like-{{ article.pk }}">
         {% else %}
-          <input type="submit" value="좋아요">
+          <input type="submit" value="좋아요" id="like-{{ article.pk }}">
         {% endif %}
       </form>
     </div>
@@ -32,30 +32,33 @@
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    const likeForm = document.querySelector('#follow-form')
+    const forms = document.querySelectorAll('.follow-form')
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value
     
-    likeForm.addEventListener('submit', function(e) {
-      e.preventDefault()
-      const articleId = event.target.dataset.articleId
-      const likeBtn = document.querySelector('#follow-form > input[type=submit]')
-
-      axios({
-        method: 'POST',
-        url : `/articles/${articleId}/likes/`,
-        headers : {'X-CSRFToken': csrfToken},
+    forms.forEach((form) => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault()
+        const articleId = event.target.dataset.articleId
+        const likeBtn = document.querySelector(`#like-${articleId}`)
+        console.log(likeBtn)
+        axios({
+          method: 'POST',
+          url : `/articles/${articleId}/likes/`,
+          headers : {'X-CSRFToken': csrfToken},
+        })
+          .then((response) => {
+            const isLiked = response.data.is_liked
+            console.log(isLiked)
+            if (isLiked === true){
+              likeBtn.value = '좋아요 취소'
+            }else {
+              likeBtn.value = '좋아요'
+            }
+          })
+          .catch((error) => {
+            console.log(error.response)
+          })
       })
-        .then((response) => {
-          const isLiked = response.data.is_liked
-          if (isLiked === true){
-            likeBtn.value = '좋아요 취소'
-          }else {
-            likeBtn.value = '좋아요'
-          }
-        })
-        .catch((error) => {
-          console.log(error.response)
-        })
     })
     
   </script>
